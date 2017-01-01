@@ -1,0 +1,6 @@
+[package]
+name = "imapread-rs"
+version = "0.1.0"
+authors = ["Giovanni Condello <condellog@gmail.com>"]
+
+[dependencies]
