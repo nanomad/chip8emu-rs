@@ -58,7 +58,7 @@ impl TryFrom<u16> for Instruction {
                     0xF01E => {
                         let reg_end = (opcode & 0x0F00) >> 8;
                         Ok(Instruction::Adi { vr: reg_end as usize })
-                    },
+                    }
                     0xF055 => {
                         let reg_end = (opcode & 0x0F00) >> 8;
                         Ok(Instruction::Str { vr: reg_end as usize })
@@ -81,7 +81,7 @@ impl TryFrom<u16> for Instruction {
 impl fmt::Debug for Instruction {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            &Instruction::Jmp { addr } => write!(f, "jmp    0x{:x}", addr+2),
+            &Instruction::Jmp { addr } => write!(f, "jmp    0x{:x}", addr + 2),
             &Instruction::Skeq { vr, k } => write!(f, "skeq   v{}, 0x{:x}", vr, k),
             &Instruction::Mov { vr, k } => write!(f, "mov    v{}, 0x{:x}", vr, k),
             &Instruction::Add { vr, k } => write!(f, "add    v{}, 0x{:x}", vr, k),

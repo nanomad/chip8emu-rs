@@ -7,3 +7,7 @@ license = "MIT License"
 
 [dependencies]
 minifb = "*"
+
+[dev-dependencies]
+rustfmt = "*"
+clippy = "*"
