@@ -1,6 +1,9 @@
 [package]
-name = "imapread-rs"
+name = "chip8emu-rs"
+description = "Chip 8 Emulator written in rust"
 version = "0.1.0"
 authors = ["Giovanni Condello <condellog@gmail.com>"]
+license = "MIT License"
 
 [dependencies]
+minifb = "*"
