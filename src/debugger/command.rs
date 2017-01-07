@@ -1,8 +1,9 @@
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub enum Command {
     Goto { loc: usize },
-    Dump,
+    Dump { count: usize },
     VideoRamDump,
+    RegDump,
     Disasm { count: usize },
     Break { loc: usize },
     Step,
@@ -23,7 +24,15 @@ impl From<String> for Command {
                 }
                 "disasm" | "d" => Command::Disasm { count: 1 },
                 "vdump" | "vx" => Command::VideoRamDump,
-                "dump" | "x" => Command::Dump,
+                "rdump" | "rx" => Command::RegDump,
+                "dump" | "x" => {
+                    let count = if tokens.len() > 1 {
+                        usize::from_str_radix(tokens[1], 10).unwrap_or(0)
+                    } else {
+                        1
+                    };
+                    Command::Dump {count: count}
+                },
                 "break" | "b" => {
                     Command::Break {
                         loc: usize::from_str_radix(tokens[1], 16).expect("Cannot parse command"),

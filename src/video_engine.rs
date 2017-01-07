@@ -10,14 +10,15 @@ pub struct VideoEngine {
 
 impl VideoEngine {
     pub fn new(window: Window) -> Self {
-        VideoEngine {
+        let mut res = VideoEngine {
             video_ram: vec![BACK_COLOR; 32 * 64],
             window: window,
-        }
+        };
+        res.draw();
+        res
     }
 
     pub fn set_pixel_to_1(&mut self, vx: usize, vy: usize) -> bool {
-        println!("TODO: XOR PIXEL WITH 1 @ {},{}", vx, vy);
         let displacement = vx + (vy * 64);
         let current_value = self.video_ram[displacement];
         match current_value {
@@ -35,7 +36,6 @@ impl VideoEngine {
         }
     }
     pub fn set_pixel_to_0(&mut self, vx: usize, vy: usize) {
-        println!("TODO: XOR PIXEL WITH 0 @ {},{}", vx, vy);
         let displacement = vx + (vy * 64);
         let current_value = self.video_ram[displacement];
         match current_value {
@@ -70,6 +70,7 @@ impl VideoEngine {
 
     pub fn draw(&mut self) {
         self.window.update_with_buffer(&self.video_ram);
+        self.window.update();
     }
 
     pub fn is_running(&self) -> bool {

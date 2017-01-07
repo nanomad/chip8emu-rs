@@ -1,24 +1,17 @@
 #![feature(try_from)]
 extern crate minifb;
 
-use minifb::{Key, WindowOptions, Scale, Window, KeyRepeat};
-use std::sync::mpsc::channel;
-use std::thread;
-use std::io::prelude::*;
-use std::io;
-use std::usize;
+use minifb::{WindowOptions, Scale, Window};
 use std::env;
 
 mod instruction;
 mod chip8;
 mod video_engine;
 mod debugger;
-use std::time::Duration;
 
 use chip8::Chip8;
 use video_engine::VideoEngine;
 use debugger::debugger::Debugger;
-use debugger::command::Command;
 
 
 fn main() {
@@ -33,7 +26,7 @@ fn main() {
         scale: Scale::X16,
     };
 
-    let mut window = Window::new("RUST Chip8 Emulator - ESC to exit", 64, 32, window_options)
+    let window = Window::new("RUST Chip8 Emulator - ESC to exit", 64, 32, window_options)
         .unwrap_or_else(|e| {
             panic!("{}", e);
         });

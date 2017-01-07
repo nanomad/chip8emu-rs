@@ -3,6 +3,7 @@ use std::fmt;
 
 pub enum Instruction {
     Cls,
+    Ret,
     Jmp { addr: usize },
     Jsr { addr: usize },
     Skeq { vr: usize, k: u8 },
@@ -14,6 +15,7 @@ pub enum Instruction {
     Sprite { rx: usize, ry: usize, s: usize },
     Key { vr: usize },
     Adi { vr: usize },
+    Font {vr: usize},
     Bcd { vr: usize },
     Str { vr: usize },
     Ldr { vr: usize },
@@ -26,6 +28,7 @@ impl TryFrom<u16> for Instruction {
             0x0000 => {
                 match opcode & 0x00FF {
                     0x00E0 => Ok(Instruction::Cls),
+                    0x00EE => Ok(Instruction::Ret),
                     _ => Err(format!("Opcode 0x{:x} not yet implemented (in 0x0000 branch)",
                                 opcode))
                 }
@@ -58,6 +61,7 @@ impl TryFrom<u16> for Instruction {
                 match opcode & 0xF0FF {
                     0xF00A => vr_op(opcode, |vr| Instruction::Key { vr: vr }),
                     0xF01E => vr_op(opcode, |vr| Instruction::Adi { vr: vr }),
+                    0xF029 => vr_op(opcode, |vr| Instruction::Font { vr: vr }),
                     0xF033 => vr_op(opcode, |vr| Instruction::Bcd { vr: vr }),
                     0xF055 => vr_op(opcode, |vr| Instruction::Str { vr: vr }),
                     0xF065 => vr_op(opcode, |vr| Instruction::Ldr { vr: vr }),
@@ -106,6 +110,7 @@ impl fmt::Debug for Instruction {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             &Instruction::Cls => write!(f, "cls"),
+            &Instruction::Ret => write!(f, "ret"),
             &Instruction::Jmp { addr } => write!(f, "jmp    0x{:x}", addr),
             &Instruction::Jsr { addr } => write!(f, "jsr    0x{:x}", addr),
             &Instruction::Skeq { vr, k } => write!(f, "skeq   v{}, 0x{:x}", vr, k),
@@ -117,6 +122,7 @@ impl fmt::Debug for Instruction {
             &Instruction::Sprite { rx, ry, s } => write!(f, "sprite {},{},{}", rx, ry, s),
             &Instruction::Key { vr } => write!(f, "key    v{}", vr),
             &Instruction::Adi { vr } => write!(f, "adi    v{}", vr),
+            &Instruction::Font { vr } => write!(f, "font   v{}", vr),
             &Instruction::Bcd { vr } => write!(f, "bcd    v{}", vr),
             &Instruction::Str { vr } => write!(f, "str    v0-v{}", vr),
             &Instruction::Ldr { vr } => write!(f, "ldr    v0-v{}", vr),

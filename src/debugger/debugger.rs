@@ -1,6 +1,7 @@
 use std::collections::HashSet;
 use std::io::prelude::*;
 use std::thread;
+use std::time::Duration;
 use std::io;
 use std::convert::TryFrom;
 use super::command::Command;
@@ -21,17 +22,17 @@ pub struct Debugger {
     execution_mode: ExecutionMode,
     chip8: Chip8,
     cursor: usize,
-    on_breakpoint: bool,
+    last_command: Option<Command>
 }
 
 impl Debugger {
     pub fn new(chip8: Chip8) -> Self {
         Debugger {
             breakpoints: HashSet::new(),
-            execution_mode: ExecutionMode::RunUntilBreakpoint,
+            execution_mode: ExecutionMode::Step,
             chip8: chip8,
             cursor: 0,
-            on_breakpoint: false,
+            last_command: None
         }
     }
 
@@ -52,17 +53,16 @@ impl Debugger {
     }
 
     fn run_until_breakpoint(&mut self, video_engine: &mut VideoEngine) {
-        while !self.must_break(self.chip8.pc()) {
+        while !self.must_break() {
             self.step(video_engine);
         }
-        self.on_breakpoint = true;
+        self.execution_mode = ExecutionMode::Step;
     }
 
     fn step(&mut self, video_engine: &mut VideoEngine) {
         self.disam_instr(self.chip8.pc());
         self.chip8.step(video_engine);
-        self.on_breakpoint = false;
-        thread::sleep_ms(50);
+        thread::sleep(Duration::from_millis(10));
     }
 
     fn manage_cli(&mut self, video_engine: &mut VideoEngine) {
@@ -75,6 +75,10 @@ impl Debugger {
     }
 
     fn execute_command(&mut self, cmd: Command, video_engine: &VideoEngine) -> bool {
+        match cmd {
+            Command::Repeat => {},
+            _ => self.last_command = Some(cmd.clone())
+        };
         match cmd {
             Command::Break { loc } => {
                 self.add_breakpoint(loc);
@@ -92,10 +96,13 @@ impl Debugger {
                 self.execution_mode = ExecutionMode::Exit;
                 false
             }
-            Command::Dump => {
-                println!("[0x{:03x}] 0x{:x}",
-                         self.cursor,
-                         self.chip8.mem()[self.cursor]);
+            Command::Dump {count} => {
+                for i in 0..count {
+                    let pos = self.cursor + i;
+                    println!("[0x{:03x}] 0x{:x}",
+                             pos,
+                             self.chip8.mem()[pos])
+                }
                 true
             }
             Command::VideoRamDump => {
@@ -113,6 +120,16 @@ impl Debugger {
                 println!();
                 true
             }
+            Command::RegDump => {
+                let regs = self.chip8.reg_v();
+                for i in 0..regs.len() {
+                    println!("v{:02} 0x{:03x}", i, regs[i])
+                }
+                println!("vi  0x{:03x}", self.chip8.reg_i());
+                println!("vd  0x{:03x}", self.chip8.reg_delay_timer());
+                println!("vs  0x{:03x}", self.chip8.reg_sound_timer());
+                true
+            }
             Command::Disasm { count } => {
                 for i in 0..count {
                     let mem_pos = self.cursor + 2 * i;
@@ -124,9 +141,11 @@ impl Debugger {
                 self.cursor = loc;
                 true
             }
-            _ => {
-                println!("Command not yet implemented {:?}", cmd);
-                true
+            Command::Repeat => {
+                match self.last_command {
+                    None => true,
+                    Some(last_command) => self.execute_command(last_command, &video_engine)
+                }
             }
         }
     }
@@ -146,8 +165,9 @@ impl Debugger {
         self.breakpoints.insert(loc);
     }
 
-    fn must_break(&self, loc: usize) -> bool {
-        (!self.on_breakpoint && !self.breakpoints.is_empty() && self.breakpoints.contains(&loc))
+    fn must_break(&self) -> bool {
+        let loc = self.chip8.pc();
+        (!self.breakpoints.is_empty() && self.breakpoints.contains(&loc))
     }
 
     fn read_stdin(&self) -> Command {
