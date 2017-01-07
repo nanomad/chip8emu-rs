@@ -14,6 +14,7 @@ pub enum Instruction {
     Sprite { rx: usize, ry: usize, s: usize },
     Key { vr: usize },
     Adi { vr: usize },
+    Bcd { vr: usize },
     Str { vr: usize },
     Ldr { vr: usize },
 }
@@ -57,6 +58,7 @@ impl TryFrom<u16> for Instruction {
                 match opcode & 0xF0FF {
                     0xF00A => vr_op(opcode, |vr| Instruction::Key { vr: vr }),
                     0xF01E => vr_op(opcode, |vr| Instruction::Adi { vr: vr }),
+                    0xF033 => vr_op(opcode, |vr| Instruction::Bcd { vr: vr }),
                     0xF055 => vr_op(opcode, |vr| Instruction::Str { vr: vr }),
                     0xF065 => vr_op(opcode, |vr| Instruction::Ldr { vr: vr }),
                     _ => {
@@ -115,6 +117,7 @@ impl fmt::Debug for Instruction {
             &Instruction::Sprite { rx, ry, s } => write!(f, "sprite {},{},{}", rx, ry, s),
             &Instruction::Key { vr } => write!(f, "key    v{}", vr),
             &Instruction::Adi { vr } => write!(f, "adi    v{}", vr),
+            &Instruction::Bcd { vr } => write!(f, "bcd    v{}", vr),
             &Instruction::Str { vr } => write!(f, "str    v0-v{}", vr),
             &Instruction::Ldr { vr } => write!(f, "ldr    v0-v{}", vr),
         }

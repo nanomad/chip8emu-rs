@@ -113,6 +113,13 @@ impl Chip8 {
             Instruction::Adi { vr } => {
                 self.reg_i += self.reg_v[vr] as u16;
             }
+            Instruction::Bcd { vr } => {
+                let value = self.reg_v[vr];
+                let i = self.reg_i as usize;
+                self.mem[i + 0] = value / 100;
+                self.mem[i + 1] = (value / 10) % 10;
+                self.mem[i + 2] = (value / 100) % 100;
+            }
             Instruction::Str { vr } => {
                 for idx in 0..vr {
                     let target_pos = self.reg_i as usize + idx;
