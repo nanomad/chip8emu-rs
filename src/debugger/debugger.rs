@@ -123,11 +123,29 @@ impl Debugger {
             Command::RegDump => {
                 let regs = self.chip8.reg_v();
                 for i in 0..regs.len() {
-                    println!("v{:02} 0x{:03x}", i, regs[i])
+                    if i> 0 && i%4 == 0 {
+                        println!();
+                    }
+                    print!("[{:02}]0x{:03x} ", i, regs[i])
                 }
-                println!("vi  0x{:03x}", self.chip8.reg_i());
-                println!("vd  0x{:03x}", self.chip8.reg_delay_timer());
-                println!("vs  0x{:03x}", self.chip8.reg_sound_timer());
+                println!();
+                println!("{}", String::from_utf8(vec![b'-'; 39]).unwrap());
+                print!("[i ]0x{:04x} ", self.chip8.reg_i());
+                print!("[d  ]0x{:03x} ", self.chip8.reg_delay_timer());
+                println!("[s ]0x{:03x}", self.chip8.reg_sound_timer());
+                true
+            }
+            Command::StackDump => {
+                let stack = self.chip8.stack();
+                let sp = self.chip8.sp();
+                for i in 0..stack.len() {
+                    let x = if i == sp {
+                        "*"
+                    } else {
+                        " "
+                    };
+                    println!("[{:}{:02}]0x{:x} ", x,i, stack[i])
+                }
                 true
             }
             Command::Disasm { count } => {

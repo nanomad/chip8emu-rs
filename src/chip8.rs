@@ -192,4 +192,12 @@ impl Chip8 {
     pub fn reg_sound_timer(&self) -> u8 {
         self.reg_sound_timer
     }
+
+    pub fn stack(&self) -> &Vec<usize> {
+        &self.stack
+    }
+
+    pub fn sp(&self) -> usize {
+        self.sp
+    }
 }

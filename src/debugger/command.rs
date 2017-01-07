@@ -4,6 +4,7 @@ pub enum Command {
     Dump { count: usize },
     VideoRamDump,
     RegDump,
+    StackDump,
     Disasm { count: usize },
     Break { loc: usize },
     Step,
@@ -25,6 +26,7 @@ impl From<String> for Command {
                 "disasm" | "d" => Command::Disasm { count: 1 },
                 "vdump" | "vx" => Command::VideoRamDump,
                 "rdump" | "rx" => Command::RegDump,
+                "sdump" | "sx" => Command::StackDump,
                 "dump" | "x" => {
                     let count = if tokens.len() > 1 {
                         usize::from_str_radix(tokens[1], 10).unwrap_or(0)
