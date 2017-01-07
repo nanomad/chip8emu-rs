@@ -70,7 +70,7 @@ impl Chip8 {
                 }
             }
             Instruction::Add { vr, k } => {
-                self.reg_v[vr].wrapping_add(k);
+                self.reg_v[vr] += k;
             }
             Instruction::Mvi { k } => self.reg_i = k,
             Instruction::Sprite { rx, ry, s } => {

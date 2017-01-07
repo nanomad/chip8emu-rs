@@ -1,5 +1,6 @@
 use std::collections::HashSet;
 use std::io::prelude::*;
+use std::thread;
 use std::io;
 use std::convert::TryFrom;
 use super::command::Command;
@@ -66,6 +67,7 @@ impl Debugger {
         self.disam_instr(self.chip8.pc());
         self.chip8.step(video_engine);
         self.on_breakpoint = false;
+        thread::sleep_ms(100);
     }
 
     fn execute_command(&mut self, cmd: Command, video_engine: &VideoEngine) -> bool {
