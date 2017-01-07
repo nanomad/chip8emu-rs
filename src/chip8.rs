@@ -12,7 +12,7 @@ pub struct Chip8 {
     reg_sound_timer: u8,
     pc: usize,
     sp: usize,
-    stack: Vec<u8>,
+    stack: Vec<usize>,
 }
 
 impl Chip8 {
@@ -62,15 +62,28 @@ impl Chip8 {
 
     fn step_instruction(&mut self, instruction: Instruction, video_engine: &mut VideoEngine) {
         match instruction {
-            Instruction::Jmp { addr } => self.pc = addr,
+            Instruction::Cls => video_engine.cls(),
+            Instruction::Jmp { addr } => self.pc = addr - 2, // Correct for pc increment later
+            Instruction::Jsr { addr } => {
+                self.sp += 1;
+                self.stack.push(self.pc);
+                self.pc = addr - 2
+            }, // Correct for pc increment later
             Instruction::Mov { vr, k } => self.reg_v[vr] = k,
+            Instruction::Movr { vr, vy } => self.reg_v[vr] = self.reg_v[vy],
+            Instruction::Shr { vr } => {
+                let current_val = self.reg_v[vr];
+                self.reg_v[0xF] = (current_val & 0x1);
+                self.reg_v[vr] = current_val >> 1;
+            },
             Instruction::Skeq { vr, k } => {
                 if self.reg_v[vr] == k {
                     self.pc += 2
                 }
             }
             Instruction::Add { vr, k } => {
-                self.reg_v[vr] += k;
+                let old_val = self.reg_v[vr];
+                self.reg_v[vr] = old_val.wrapping_add(k);
             }
             Instruction::Mvi { k } => self.reg_i = k,
             Instruction::Sprite { rx, ry, s } => {
@@ -93,6 +106,9 @@ impl Chip8 {
 
                     }
                 }
+            }
+            Instruction::Key { vr } => {
+                self.reg_v[vr] = video_engine.wait_for_key_input();
             }
             Instruction::Adi { vr } => {
                 self.reg_i += self.reg_v[vr] as u16;

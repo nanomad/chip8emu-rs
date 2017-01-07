@@ -51,6 +51,19 @@ impl VideoEngine {
         }
     }
 
+    pub fn cls(&mut self) {
+        for i in 0..self.video_ram.len() {
+            self.video_ram[i] = BACK_COLOR
+        }
+    }
+
+    pub fn wait_for_key_input(&mut self) -> u8 {
+        while !self.window.is_key_down(Key::Up) {
+            self.draw()
+        }
+        0x1
+    }
+
     pub fn vram(&self) -> &Vec<u32> {
         &self.video_ram
     }

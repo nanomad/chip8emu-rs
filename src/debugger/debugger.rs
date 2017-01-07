@@ -28,7 +28,7 @@ impl Debugger {
     pub fn new(chip8: Chip8) -> Self {
         Debugger {
             breakpoints: HashSet::new(),
-            execution_mode: ExecutionMode::Step,
+            execution_mode: ExecutionMode::RunUntilBreakpoint,
             chip8: chip8,
             cursor: 0,
             on_breakpoint: false,
@@ -37,15 +37,10 @@ impl Debugger {
 
     pub fn run(&mut self, video_engine: &mut VideoEngine) -> bool {
         self.cursor = self.chip8.pc();
-        while {
-            let cmd = self.read_stdin();
-            self.execute_command(cmd, video_engine)
-        } {
-            // Nothing, just read the next command until we must execute
-        }
         match self.execution_mode {
             ExecutionMode::Exit => false,
             ExecutionMode::Step => {
+                self.manage_cli(video_engine);
                 self.step(video_engine);
                 true
             }
@@ -67,7 +62,16 @@ impl Debugger {
         self.disam_instr(self.chip8.pc());
         self.chip8.step(video_engine);
         self.on_breakpoint = false;
-        thread::sleep_ms(100);
+        thread::sleep_ms(50);
+    }
+
+    fn manage_cli(&mut self, video_engine: &mut VideoEngine) {
+        while {
+            let cmd = self.read_stdin();
+            self.execute_command(cmd, video_engine)
+        } {
+            // Nothing, just read the next command until we must execute
+        }
     }
 
     fn execute_command(&mut self, cmd: Command, video_engine: &VideoEngine) -> bool {
