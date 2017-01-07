@@ -33,8 +33,8 @@ impl From<String> for Command {
                     } else {
                         1
                     };
-                    Command::Dump {count: count}
-                },
+                    Command::Dump { count: count }
+                }
                 "break" | "b" => {
                     Command::Break {
                         loc: usize::from_str_radix(tokens[1], 16).expect("Cannot parse command"),

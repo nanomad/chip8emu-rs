@@ -7,7 +7,7 @@ use super::video_engine::VideoEngine;
 const FONT_BASE_ADDR: usize = 0x0;
 const NUM_FONTS: usize = 16;
 const FONT_SIZE: usize = 5;
-const FONT_MAP: [u8; NUM_FONTS*FONT_SIZE] =
+const FONT_MAP: [u8; NUM_FONTS * FONT_SIZE] =
     [0xF0, 0x90, 0x90, 0x90, 0xF0, 0x20, 0x60, 0x20, 0x20, 0x70, 0xF0, 0x10, 0xF0, 0x80, 0xF0,
      0xF0, 0x10, 0xF0, 0x10, 0xF0, 0x90, 0x90, 0xF0, 0x10, 0x10, 0xF0, 0x80, 0xF0, 0x10, 0xF0,
      0xF0, 0x80, 0xF0, 0x90, 0xF0, 0xF0, 0x10, 0x20, 0x40, 0x40, 0xF0, 0x90, 0xF0, 0x90, 0xF0,
@@ -153,14 +153,14 @@ impl Chip8 {
                 self.mem[i + 2] = (value % 100) % 100;
             }
             Instruction::Str { vr } => {
-                for idx in 0..(vr+1) {
+                for idx in 0..(vr + 1) {
                     let target_pos = self.reg_i as usize + idx;
                     let data = self.reg_v[idx];
                     self.memory_write(target_pos, data);
                 }
             }
             Instruction::Ldr { vr } => {
-                for idx in 0..(vr+1) {
+                for idx in 0..(vr + 1) {
                     self.reg_v[idx] = self.memory_read(self.reg_i as usize + idx)
                 }
             }

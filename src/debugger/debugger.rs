@@ -22,7 +22,7 @@ pub struct Debugger {
     execution_mode: ExecutionMode,
     chip8: Chip8,
     cursor: usize,
-    last_command: Option<Command>
+    last_command: Option<Command>,
 }
 
 impl Debugger {
@@ -32,7 +32,7 @@ impl Debugger {
             execution_mode: ExecutionMode::Step,
             chip8: chip8,
             cursor: 0,
-            last_command: None
+            last_command: None,
         }
     }
 
@@ -76,8 +76,8 @@ impl Debugger {
 
     fn execute_command(&mut self, cmd: Command, video_engine: &VideoEngine) -> bool {
         match cmd {
-            Command::Repeat => {},
-            _ => self.last_command = Some(cmd.clone())
+            Command::Repeat => {}
+            _ => self.last_command = Some(cmd.clone()),
         };
         match cmd {
             Command::Break { loc } => {
@@ -96,12 +96,10 @@ impl Debugger {
                 self.execution_mode = ExecutionMode::Exit;
                 false
             }
-            Command::Dump {count} => {
+            Command::Dump { count } => {
                 for i in 0..count {
                     let pos = self.cursor + i;
-                    println!("[0x{:03x}] 0x{:x}",
-                             pos,
-                             self.chip8.mem()[pos])
+                    println!("[0x{:03x}] 0x{:x}", pos, self.chip8.mem()[pos])
                 }
                 true
             }
@@ -123,7 +121,7 @@ impl Debugger {
             Command::RegDump => {
                 let regs = self.chip8.reg_v();
                 for i in 0..regs.len() {
-                    if i> 0 && i%4 == 0 {
+                    if i > 0 && i % 4 == 0 {
                         println!();
                     }
                     print!("[{:02}]0x{:03x} ", i, regs[i])
@@ -139,12 +137,8 @@ impl Debugger {
                 let stack = self.chip8.stack();
                 let sp = self.chip8.sp();
                 for i in 0..stack.len() {
-                    let x = if i == sp {
-                        "*"
-                    } else {
-                        " "
-                    };
-                    println!("[{:}{:02}]0x{:x} ", x,i, stack[i])
+                    let x = if i == sp { "*" } else { " " };
+                    println!("[{:}{:02}]0x{:x} ", x, i, stack[i])
                 }
                 true
             }
@@ -162,7 +156,7 @@ impl Debugger {
             Command::Repeat => {
                 match self.last_command {
                     None => true,
-                    Some(last_command) => self.execute_command(last_command, &video_engine)
+                    Some(last_command) => self.execute_command(last_command, &video_engine),
                 }
             }
         }
