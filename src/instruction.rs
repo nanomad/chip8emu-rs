@@ -11,9 +11,13 @@ pub enum Instruction {
     Movr { vr: usize, vy: usize },
     Shr { vr: usize },
     Add { vr: usize, k: u8 },
+    Addr { vr: usize, vy: usize },
     Mvi { k: u16 },
+    Rnd { vr: usize, k: u8 },
     Sprite { rx: usize, ry: usize, s: usize },
+    Skp { k: u8 },
     Key { vr: usize },
+    Sdelay { vr: usize },
     Adi { vr: usize },
     Font { vr: usize },
     Bcd { vr: usize },
@@ -43,6 +47,7 @@ impl TryFrom<u16> for Instruction {
             0x8000 => {
                 match opcode & 0xF00F {
                     0x8000 => vr_vy_op(opcode, |vr, vy| Instruction::Movr { vr: vr, vy: vy }),
+                    0x8004 => vr_vy_op(opcode, |vr, vy| Instruction::Addr { vr: vr, vy: vy }),
                     0x8006 => vr_op(opcode, |vr| Instruction::Shr { vr: vr }),
                     _ => {
                         Err(format!("Opcode 0x{:x} not yet implemented (in 0x8000 branch)",
@@ -51,6 +56,7 @@ impl TryFrom<u16> for Instruction {
                 }
             }
             0xA000 => k_op(opcode, |k| Instruction::Mvi { k: k }),
+            0xC000 => vr_k_op(opcode, |vr, k| Instruction::Rnd { vr: vr, k: k }),
             0xD000 => {
                 let s = (opcode & 0x000F) as usize;
                 let ry = ((opcode & 0x00F0) >> 4) as usize;
@@ -61,9 +67,19 @@ impl TryFrom<u16> for Instruction {
                     s: s,
                 })
             }
+            0xE000 => {
+                match opcode & 0xF0FF {
+                    0xE09E => vr_op(opcode, |k| Instruction::Skp { k: k as u8 }),
+                    _ => {
+                        Err(format!("Opcode 0x{:x} not yet implemented (in 0xE000 branch)",
+                                    opcode))
+                    }
+                }
+            }
             0xF000 => {
                 match opcode & 0xF0FF {
                     0xF00A => vr_op(opcode, |vr| Instruction::Key { vr: vr }),
+                    0xF015 => vr_op(opcode, |vr| Instruction::Sdelay { vr: vr }),
                     0xF01E => vr_op(opcode, |vr| Instruction::Adi { vr: vr }),
                     0xF029 => vr_op(opcode, |vr| Instruction::Font { vr: vr }),
                     0xF033 => vr_op(opcode, |vr| Instruction::Bcd { vr: vr }),
@@ -122,9 +138,13 @@ impl fmt::Debug for Instruction {
             &Instruction::Movr { vr, vy } => write!(f, "mov    v{}, v{}", vr, vy),
             &Instruction::Shr { vr } => write!(f, "shr    v{}", vr),
             &Instruction::Add { vr, k } => write!(f, "add    v{}, 0x{:x}", vr, k),
+            &Instruction::Addr { vr, vy } => write!(f, "add    v{}, v{}", vr, vy),
             &Instruction::Mvi { k } => write!(f, "mvi    0x{:x}", k),
+            &Instruction::Rnd { vr, k } => write!(f, "rnd    v{}, 0x{:x}", vr, k),
             &Instruction::Sprite { rx, ry, s } => write!(f, "sprite {},{},{}", rx, ry, s),
+            &Instruction::Skp { k } => write!(f, "skp    0x{:x}", k),
             &Instruction::Key { vr } => write!(f, "key    v{}", vr),
+            &Instruction::Sdelay { vr } => write!(f, "sdelay  v{}", vr),
             &Instruction::Adi { vr } => write!(f, "adi    v{}", vr),
             &Instruction::Font { vr } => write!(f, "font   v{}", vr),
             &Instruction::Bcd { vr } => write!(f, "bcd    v{}", vr),

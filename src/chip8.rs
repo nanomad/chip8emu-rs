@@ -4,6 +4,8 @@ use std::convert::TryFrom;
 use super::instruction::Instruction;
 use super::video_engine::VideoEngine;
 
+use rand::{thread_rng, Rng};
+
 const FONT_BASE_ADDR: usize = 0x0;
 const NUM_FONTS: usize = 16;
 const FONT_SIZE: usize = 5;
@@ -111,7 +113,23 @@ impl Chip8 {
                 let old_val = self.reg_v[vr];
                 self.reg_v[vr] = old_val.wrapping_add(k);
             }
+            Instruction::Addr { vr, vy } => {
+                let old_r = self.reg_v[vr];
+                let old_y = self.reg_v[vy];
+                let (result, overflow) = old_r.overflowing_add(old_y);
+                if overflow {
+                    self.reg_v[0xF] = 1
+                } else {
+                    self.reg_v[0xF] = 0
+                }
+                self.reg_v[vr] = result;
+            }
             Instruction::Mvi { k } => self.reg_i = k,
+            Instruction::Rnd { vr, k } => {
+                let mut buffer = [0u8; 1];
+                thread_rng().fill_bytes(&mut buffer);
+                self.reg_v[vr] = buffer[0] & k;
+            }
             Instruction::Sprite { rx, ry, s } => {
                 let x = self.reg_v[rx] as usize;
                 let y = self.reg_v[ry] as usize;
@@ -131,6 +149,13 @@ impl Chip8 {
                         }
 
                     }
+                }
+            }
+            Instruction::Skp { k } => {
+                let key = video_engine.get_current_key_input();
+                match key {
+                    Some(x) if x == k => self.pc += 2,
+                    _ => {}
                 }
             }
             Instruction::Key { vr } => {
@@ -163,6 +188,10 @@ impl Chip8 {
                 for idx in 0..(vr + 1) {
                     self.reg_v[idx] = self.memory_read(self.reg_i as usize + idx)
                 }
+            }
+            Instruction::Sdelay {vr} => {
+                let amount = self.reg_v[vr];
+                self.reg_delay_timer = amount;
             }
         }
         video_engine.draw();

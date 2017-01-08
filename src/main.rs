@@ -1,5 +1,6 @@
 #![feature(try_from)]
 extern crate minifb;
+extern crate rand;
 
 use minifb::{WindowOptions, Scale, Window};
 use std::env;
