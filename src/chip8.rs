@@ -99,6 +99,7 @@ impl Chip8 {
             } // Correct for pc increment later
             Instruction::Mov { vr, k } => self.reg_v[vr] = k,
             Instruction::Movr { vr, vy } => self.reg_v[vr] = self.reg_v[vy],
+            Instruction::And { vr, vy } => self.reg_v[vr] &= self.reg_v[vy],
             Instruction::Shr { vr } => {
                 let current_val = self.reg_v[vr];
                 self.reg_v[0xF] = current_val & 1;

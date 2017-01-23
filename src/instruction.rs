@@ -10,6 +10,7 @@ pub enum Instruction {
     Skne { vr: usize, k: u8 },
     Mov { vr: usize, k: u8 },
     Movr { vr: usize, vy: usize },
+    And { vr: usize, vy: usize },
     Shr { vr: usize },
     Skner { vr: usize, vy: usize },
     Add { vr: usize, k: u8 },
@@ -51,6 +52,7 @@ impl TryFrom<u16> for Instruction {
             0x8000 => {
                 match opcode & 0xF00F {
                     0x8000 => vr_vy_op(opcode, |vr, vy| Instruction::Movr { vr: vr, vy: vy }),
+                    0x8002 => vr_vy_op(opcode, |vr, vy| Instruction::And { vr: vr, vy: vy }),
                     0x8004 => vr_vy_op(opcode, |vr, vy| Instruction::Addr { vr: vr, vy: vy }),
                     0x8006 => vr_op(opcode, |vr| Instruction::Shr { vr: vr }),
                     _ => {
@@ -143,6 +145,7 @@ impl fmt::Debug for Instruction {
             Instruction::Skne { vr, k } => write!(f, "skne   v{}, 0x{:x}", vr, k),
             Instruction::Mov { vr, k } => write!(f, "mov    v{}, 0x{:x}", vr, k),
             Instruction::Movr { vr, vy } => write!(f, "mov    v{}, v{}", vr, vy),
+            Instruction::And { vr, vy } => write!(f, "and    v{}, v{}", vr, vy),
             Instruction::Shr { vr } => write!(f, "shr    v{}", vr),
             Instruction::Skner { vr, vy } => write!(f, "skne   v{}, v{}", vr, vy),
             Instruction::Add { vr, k } => write!(f, "add    v{}, 0x{:x}", vr, k),
