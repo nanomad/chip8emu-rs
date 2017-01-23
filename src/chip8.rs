@@ -169,6 +169,14 @@ impl Chip8 {
                     _ => {}
                 }
             }
+            Instruction::Sknp { k } => {
+                println!("Skipping if key {:x} is not pressed", k);
+                let key = peripherals.keypad.get_current_key_input();
+                match key {
+                    Some(x) if x == k => {},
+                    _ => self.pc += 2
+                }
+            }
             Instruction::Key { vr } => {
                 println!("Waiting for a key to be pressed");
                 let key = peripherals.keypad.get_current_key_input();

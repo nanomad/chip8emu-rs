@@ -19,6 +19,7 @@ pub enum Instruction {
     Rnd { vr: usize, k: u8 },
     Sprite { rx: usize, ry: usize, s: usize },
     Skp { k: u8 },
+    Sknp { k: u8 },
     Key { vr: usize },
     Sdelay { vr: usize },
     Gdelay { vr: usize },
@@ -77,6 +78,7 @@ impl TryFrom<u16> for Instruction {
             0xE000 => {
                 match opcode & 0xF0FF {
                     0xE09E => vr_op(opcode, |k| Instruction::Skp { k: k as u8 }),
+                    0xE0A1 => vr_op(opcode, |k| Instruction::Sknp { k: k as u8 }),
                     _ => {
                         Err(format!("Opcode 0x{:x} not yet implemented (in 0xE000 branch)",
                                     opcode))
@@ -154,6 +156,7 @@ impl fmt::Debug for Instruction {
             Instruction::Rnd { vr, k } => write!(f, "rnd    v{}, 0x{:x}", vr, k),
             Instruction::Sprite { rx, ry, s } => write!(f, "sprite {},{},{}", rx, ry, s),
             Instruction::Skp { k } => write!(f, "skp    0x{:x}", k),
+            Instruction::Sknp { k } => write!(f, "sknp   0x{:x}", k),
             Instruction::Key { vr } => write!(f, "key    v{}", vr),
             Instruction::Sdelay { vr } => write!(f, "sdelay  v{}", vr),
             Instruction::Gdelay { vr } => write!(f, "gdelay  v{}", vr),
