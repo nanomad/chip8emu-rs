@@ -11,6 +11,7 @@ pub enum Instruction {
     Mov { vr: usize, k: u8 },
     Movr { vr: usize, vy: usize },
     Shr { vr: usize },
+    Skner { vr: usize, vy: usize },
     Add { vr: usize, k: u8 },
     Addr { vr: usize, vy: usize },
     Mvi { k: u16 },
@@ -58,6 +59,7 @@ impl TryFrom<u16> for Instruction {
                     }
                 }
             }
+            0x9000 => vr_vy_op(opcode, |vr, vy| Instruction::Skner { vr: vr, vy: vy }),
             0xA000 => k_op(opcode, |k| Instruction::Mvi { k: k }),
             0xC000 => vr_k_op(opcode, |vr, k| Instruction::Rnd { vr: vr, k: k }),
             0xD000 => {
@@ -142,6 +144,7 @@ impl fmt::Debug for Instruction {
             Instruction::Mov { vr, k } => write!(f, "mov    v{}, 0x{:x}", vr, k),
             Instruction::Movr { vr, vy } => write!(f, "mov    v{}, v{}", vr, vy),
             Instruction::Shr { vr } => write!(f, "shr    v{}", vr),
+            Instruction::Skner { vr, vy } => write!(f, "skne   v{}, v{}", vr, vy),
             Instruction::Add { vr, k } => write!(f, "add    v{}, 0x{:x}", vr, k),
             Instruction::Addr { vr, vy } => write!(f, "add    v{}, v{}", vr, vy),
             Instruction::Mvi { k } => write!(f, "mvi    0x{:x}", k),

@@ -104,6 +104,11 @@ impl Chip8 {
                 self.reg_v[0xF] = current_val & 1;
                 self.reg_v[vr] = current_val >> 1;
             }
+            Instruction::Skner { vr, vy } => {
+                if self.reg_v[vr] != self.reg_v[vy] {
+                    self.pc += 2;
+                }
+            }
             Instruction::Skeq { vr, k } => {
                 if self.reg_v[vr] == k {
                     self.pc += 2
