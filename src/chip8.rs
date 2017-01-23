@@ -213,7 +213,7 @@ impl Chip8 {
                     let ticks_left = timer_clone.fetch_sub(1, Ordering::SeqCst) - 1;
                     if ticks_left > 0 {
                         println!("Still {} ticks left", ticks_left);
-                        thread::sleep(time::Duration::from_millis(1000));
+                        thread::sleep(time::Duration::from_millis(1000/60));
                     } else {
                         break;
                     }
