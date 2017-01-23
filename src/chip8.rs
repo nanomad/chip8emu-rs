@@ -133,6 +133,13 @@ impl Chip8 {
                 }
                 self.reg_v[vr] = result;
             }
+            Instruction::Subr { vr, vy } => {
+                let old_r = self.reg_v[vr];
+                let old_y = self.reg_v[vy];
+                let (result, overflow) = old_r.overflowing_sub(old_y);
+                self.reg_v[0xF] = if overflow { 0 } else { 1 };
+                self.reg_v[vr] = result;
+            }
             Instruction::Mvi { k } => self.reg_i = k,
             Instruction::Rnd { vr, k } => {
                 let mut buffer = [0u8; 1];

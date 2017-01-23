@@ -15,6 +15,7 @@ pub enum Instruction {
     Skner { vr: usize, vy: usize },
     Add { vr: usize, k: u8 },
     Addr { vr: usize, vy: usize },
+    Subr { vr: usize, vy: usize },
     Mvi { k: u16 },
     Rnd { vr: usize, k: u8 },
     Sprite { rx: usize, ry: usize, s: usize },
@@ -55,6 +56,7 @@ impl TryFrom<u16> for Instruction {
                     0x8000 => vr_vy_op(opcode, |vr, vy| Instruction::Movr { vr: vr, vy: vy }),
                     0x8002 => vr_vy_op(opcode, |vr, vy| Instruction::And { vr: vr, vy: vy }),
                     0x8004 => vr_vy_op(opcode, |vr, vy| Instruction::Addr { vr: vr, vy: vy }),
+                    0x8005 => vr_vy_op(opcode, |vr, vy| Instruction::Subr { vr: vr, vy: vy }),
                     0x8006 => vr_op(opcode, |vr| Instruction::Shr { vr: vr }),
                     _ => {
                         Err(format!("Opcode 0x{:x} not yet implemented (in 0x8000 branch)",
@@ -152,6 +154,7 @@ impl fmt::Debug for Instruction {
             Instruction::Skner { vr, vy } => write!(f, "skne   v{}, v{}", vr, vy),
             Instruction::Add { vr, k } => write!(f, "add    v{}, 0x{:x}", vr, k),
             Instruction::Addr { vr, vy } => write!(f, "add    v{}, v{}", vr, vy),
+            Instruction::Subr { vr, vy } => write!(f, "sub    v{}, v{}", vr, vy),
             Instruction::Mvi { k } => write!(f, "mvi    0x{:x}", k),
             Instruction::Rnd { vr, k } => write!(f, "rnd    v{}, 0x{:x}", vr, k),
             Instruction::Sprite { rx, ry, s } => write!(f, "sprite {},{},{}", rx, ry, s),
