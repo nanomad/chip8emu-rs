@@ -1,8 +1,11 @@
-use std::fs::File;
-use std::io::prelude::*;
 use std::convert::TryFrom;
-use super::instruction::Instruction;
-use super::video_engine::VideoEngine;
+use std::sync::Arc;
+use std::sync::atomic::{AtomicUsize, Ordering};
+use std::{thread, time};
+use std::thread::JoinHandle;
+
+use instruction::Instruction;
+use peripherals::Peripherals;
 
 use rand::{thread_rng, Rng};
 
@@ -21,26 +24,29 @@ pub struct Chip8 {
     mem: Vec<u8>,
     reg_v: Vec<u8>,
     reg_i: u16,
-    reg_delay_timer: u8,
+    reg_delay_timer: Arc<AtomicUsize>,
     reg_sound_timer: u8,
     pc: usize,
     sp: usize,
     stack: Vec<usize>,
+
 }
 
 impl Chip8 {
-    pub fn new() -> Chip8 {
+    pub fn new(rom: &Vec<u8>) -> Chip8 {
         let mut chip8 = Chip8 {
             mem: vec![0; 0xFFF],
             reg_v: vec![0; 16],
             reg_i: 0,
-            reg_delay_timer: 0,
+            reg_delay_timer: Arc::new(AtomicUsize::new(0)),
             reg_sound_timer: 0,
             pc: 0x200,
             sp: 0,
             stack: vec![0; 16],
+
         };
         chip8.load_fonts();
+        chip8.load_rom(rom);
         chip8
     }
 
@@ -50,30 +56,24 @@ impl Chip8 {
         }
     }
 
-    pub fn load_rom(&mut self, path: &str) {
-        let mut f: File = File::open(path).expect(&format!("Cannot open file {}", path));
-        let mut buf: Vec<u8> = Vec::new();
-        let read = f.read_to_end(&mut buf).expect(&format!("Cannot read from file {}", path));
-        println!("Loaded {} bytes", read);
-        for b in 0..buf.len() {
-            self.mem[0x200 + b] = buf[b];
+    fn load_rom(&mut self, rom: &Vec<u8>) {
+        for (b, buf_i) in rom.iter().enumerate() {
+            self.mem[0x200 + b] = *buf_i;
         }
     }
 
-    pub fn step(&mut self, video_engine: &mut VideoEngine) {
+    pub fn step(&mut self, peripherals: &mut Peripherals) {
         let hi_nibble = self.mem[self.pc] as u16;
         let lo_nibble = self.mem[self.pc + 1] as u16;
         let opcode = (hi_nibble << 8) | lo_nibble;
         match Instruction::try_from(opcode) {
             Err(msg) => panic!("Error decoding instruction at 0x{0:03x}: {1}", self.pc, msg),
-            Ok(instruction) => self.step_instruction(instruction, video_engine),
+            Ok(instruction) => self.step_instruction(instruction, peripherals),
         }
     }
 
     fn memory_read(&self, pos: usize) -> u8 {
-        let val = self.mem[pos];
-        // println!("[R][0x{:03x}] 0x{:03x}", pos, val);
-        val
+        self.mem[pos]
     }
 
     fn memory_write(&mut self, pos: usize, data: u8) {
@@ -81,9 +81,9 @@ impl Chip8 {
         // println!("[W][0x{:03x}] 0x{:03x}", pos, data);
     }
 
-    fn step_instruction(&mut self, instruction: Instruction, video_engine: &mut VideoEngine) {
+    fn step_instruction(&mut self, instruction: Instruction, peripherals: &mut Peripherals) {
         match instruction {
-            Instruction::Cls => video_engine.cls(),
+            Instruction::Cls => peripherals.video_engine.cls(),
             Instruction::Ret => {
                 assert!(self.sp > 0);
                 self.sp -= 1;
@@ -140,26 +140,40 @@ impl Chip8 {
                     let pixel = self.memory_read(mem_pos);
                     for xline in 0..8 {
                         if pixel & (0x80 >> xline) != 0 {
-                            let collision = video_engine.set_pixel_to_1(x + xline, y + yline);
+                            let collision = peripherals.video_engine
+                                .set_pixel_to_1(x + xline, y + yline);
                             if collision {
                                 self.reg_v[0xF] = 1;
                             }
                         } else {
-                            video_engine.set_pixel_to_0(x + xline, y + yline);
+                            peripherals.video_engine.set_pixel_to_0(x + xline, y + yline);
                         }
 
                     }
                 }
             }
             Instruction::Skp { k } => {
-                let key = video_engine.get_current_key_input();
+                println!("Waiting for key {:?} to skip", k);
+                let key = peripherals.keypad.get_current_key_input();
                 match key {
                     Some(x) if x == k => self.pc += 2,
                     _ => {}
                 }
             }
             Instruction::Key { vr } => {
-                self.reg_v[vr] = video_engine.wait_for_key_input();
+                println!("Waiting for a key to be pressed");
+                let key = peripherals.keypad.get_current_key_input();
+                match key {
+                    Some(x) => {
+                        println!(" ... Got {:?}", x);
+                        self.reg_v[vr] = x
+                    },
+                    _ => {
+                        println!(" ... Waiting more");
+                        self.pc -= 2; // Emulate a SLEEP
+                    }
+                }
+
             }
             Instruction::Adi { vr } => {
                 self.reg_i += self.reg_v[vr] as u16;
@@ -173,7 +187,7 @@ impl Chip8 {
                 let value = self.reg_v[vr];
                 println!("BCD DECODING OF {}", value);
                 let i = self.reg_i as usize;
-                self.mem[i + 0] = value / 100;
+                self.mem[i] = value / 100;
                 self.mem[i + 1] = (value / 10) % 10;
                 self.mem[i + 2] = (value % 100) % 100;
             }
@@ -189,12 +203,25 @@ impl Chip8 {
                     self.reg_v[idx] = self.memory_read(self.reg_i as usize + idx)
                 }
             }
-            Instruction::Sdelay {vr} => {
+            Instruction::Gdelay { vr } => {
+                let amount = self.reg_delay_timer();
+                self.reg_v[vr] = amount;
+            }
+            Instruction::Sdelay { vr } => {
                 let amount = self.reg_v[vr];
-                self.reg_delay_timer = amount;
+                self.reg_delay_timer.store((amount + 1) as _, Ordering::SeqCst);
+                let timer_clone = self.reg_delay_timer.clone();
+                thread::spawn(move || loop {
+                    let ticks_left = timer_clone.fetch_sub(1, Ordering::SeqCst) - 1;
+                    if ticks_left > 0 {
+                        println!("Still {} ticks left", ticks_left);
+                        thread::sleep(time::Duration::from_millis(1000));
+                    } else {
+                        break;
+                    }
+                });
             }
         }
-        video_engine.draw();
         self.pc += 2;
     }
 
@@ -215,7 +242,7 @@ impl Chip8 {
     }
 
     pub fn reg_delay_timer(&self) -> u8 {
-        self.reg_delay_timer
+        self.reg_delay_timer.load(Ordering::SeqCst) as _
     }
 
     pub fn reg_sound_timer(&self) -> u8 {

@@ -2,43 +2,35 @@
 extern crate minifb;
 extern crate rand;
 
-use minifb::{WindowOptions, Scale, Window};
 use std::env;
 
+mod emulator;
 mod instruction;
 mod chip8;
 mod video_engine;
 mod debugger;
+mod peripherals;
 
-use chip8::Chip8;
-use video_engine::VideoEngine;
-use debugger::debugger::Debugger;
+use emulator::Emulator;
 
+use std::fs::File;
+use std::io::prelude::*;
 
 fn main() {
     println!("RUST Chip8 Emulator");
 
     let rom_path = env::args().nth(1).expect("Please provide a path to a Chip8 ROM");
+    let rom = load_rom(&rom_path);
+    let mut emulator = Emulator::new(&rom);
+    emulator.run();
 
-    let window_options = WindowOptions {
-        borderless: false,
-        title: true,
-        resize: false,
-        scale: Scale::X16,
-    };
+}
 
-    let window = Window::new("RUST Chip8 Emulator - ESC to exit", 64, 32, window_options)
-        .unwrap_or_else(|e| {
-            panic!("{}", e);
-        });
 
-    let mut video_engine = VideoEngine::new(window);
-    let mut chip8 = Chip8::new();
-    chip8.load_rom(rom_path.as_str());
-    let mut debugger = Debugger::new(chip8);
-    while video_engine.is_running() {
-        if !debugger.run(&mut video_engine) {
-            break;
-        }
-    }
+fn load_rom(path: &str) -> Vec<u8> {
+    let mut f: File = File::open(path).expect(&format!("Cannot open file {}", path));
+    let mut buf: Vec<u8> = Vec::new();
+    let read = f.read_to_end(&mut buf).expect(&format!("Cannot read from file {}", path));
+    println!("Loaded {} bytes", read);
+    buf
 }

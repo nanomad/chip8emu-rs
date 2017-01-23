@@ -1,3 +1,5 @@
+use std::convert::TryFrom;
+
 #[derive(Debug, Copy, Clone)]
 pub enum Command {
     Goto { loc: usize },
@@ -13,40 +15,42 @@ pub enum Command {
     Quit,
 }
 
-impl From<String> for Command {
-    fn from(text: String) -> Self {
-        let tokens: Vec<&str> = text.trim().split(" ").collect();
+impl TryFrom<String> for Command {
+    type Err = String;
+    fn try_from(text: String) -> Result<Self, Self::Err> {
+        let tokens: Vec<&str> = text.trim().split(' ').collect();
         if !tokens.is_empty() {
             match tokens[0] {
                 "goto" | "g" => {
-                    Command::Goto {
+                    Ok(Command::Goto {
                         loc: usize::from_str_radix(tokens[1], 16).expect("Cannot parse command"),
-                    }
+                    })
                 }
-                "disasm" | "d" => Command::Disasm { count: 1 },
-                "vdump" | "vx" => Command::VideoRamDump,
-                "rdump" | "rx" => Command::RegDump,
-                "sdump" | "sx" => Command::StackDump,
+                "disasm" | "d" => Ok(Command::Disasm { count: 1 }),
+                "vdump" | "vx" => Ok(Command::VideoRamDump),
+                "rdump" | "rx" => Ok(Command::RegDump),
+                "sdump" | "sx" => Ok(Command::StackDump),
                 "dump" | "x" => {
                     let count = if tokens.len() > 1 {
                         usize::from_str_radix(tokens[1], 10).unwrap_or(0)
                     } else {
                         1
                     };
-                    Command::Dump { count: count }
+                    Ok(Command::Dump { count: count })
                 }
                 "break" | "b" => {
-                    Command::Break {
+                    Ok(Command::Break {
                         loc: usize::from_str_radix(tokens[1], 16).expect("Cannot parse command"),
-                    }
+                    })
                 }
-                "step" | "s" | "." => Command::Step,
-                "run" | "r" => Command::Run,
-                "quit" | "q" => Command::Quit,
-                _ => Command::Repeat,
+                "step" | "s" | "." => Ok(Command::Step),
+                "run" | "r" => Ok(Command::Run),
+                "quit" | "q" => Ok(Command::Quit),
+                "" => Ok(Command::Repeat),
+                _ => Err(format!("Unsupported command {}", text)),
             }
         } else {
-            Command::Repeat
+            Ok(Command::Repeat)
         }
     }
 }
