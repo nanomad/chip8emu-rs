@@ -3,7 +3,6 @@ pub const FRONT_COLOR: u32 = 0xFFFFFFFF;
 pub const SCREEN_X_SIZE: usize = 64;
 pub const SCREEN_Y_SIZE: usize = 32;
 
-
 pub struct VideoEngine {
     video_ram: Vec<u32>,
 }

@@ -162,7 +162,7 @@ impl Chip8 {
                 }
             }
             Instruction::Skp { k } => {
-                println!("Waiting for key {:?} to skip", k);
+                println!("Skipping if key {:x} is pressed", k);
                 let key = peripherals.keypad.get_current_key_input();
                 match key {
                     Some(x) if x == k => self.pc += 2,
@@ -182,7 +182,7 @@ impl Chip8 {
                 let key = peripherals.keypad.get_current_key_input();
                 match key {
                     Some(x) => {
-                        println!(" ... Got {:?}", x);
+                        println!(" ... Got {:x}", x);
                         self.reg_v[vr] = x
                     },
                     _ => {
