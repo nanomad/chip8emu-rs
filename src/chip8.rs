@@ -200,11 +200,10 @@ impl Chip8 {
             }
             Instruction::Bcd { vr } => {
                 let value = self.reg_v[vr];
-                println!("BCD DECODING OF {}", value);
                 let i = self.reg_i as usize;
                 self.mem[i] = value / 100;
                 self.mem[i + 1] = (value / 10) % 10;
-                self.mem[i + 2] = (value % 100) % 100;
+                self.mem[i + 2] = value % 10;
             }
             Instruction::Str { vr } => {
                 for idx in 0..(vr + 1) {
