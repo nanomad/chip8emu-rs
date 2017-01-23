@@ -145,8 +145,6 @@ impl Chip8 {
                             if collision {
                                 self.reg_v[0xF] = 1;
                             }
-                        } else {
-                            peripherals.video_engine.set_pixel_to_0(x + xline, y + yline);
                         }
 
                     }
