@@ -98,10 +98,16 @@ impl Chip8 {
             Instruction::Mov { vr, k } => self.reg_v[vr] = k,
             Instruction::Movr { vr, vy } => self.reg_v[vr] = self.reg_v[vy],
             Instruction::And { vr, vy } => self.reg_v[vr] &= self.reg_v[vy],
+            Instruction::Xor { vr, vy } => self.reg_v[vr] ^= self.reg_v[vy],
             Instruction::Shr { vr } => {
                 let current_val = self.reg_v[vr];
                 self.reg_v[0xF] = current_val & 1;
                 self.reg_v[vr] = current_val >> 1;
+            }
+            Instruction::Shl { vr } => {
+                let current_val = self.reg_v[vr];
+                self.reg_v[0xF] = (current_val & 0xFF) >> 7;
+                self.reg_v[vr] = current_val << 1;
             }
             Instruction::Skner { vr, vy } => {
                 if self.reg_v[vr] != self.reg_v[vy] {
