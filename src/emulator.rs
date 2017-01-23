@@ -56,7 +56,8 @@ impl Emulator {
 
     pub fn run(&mut self) {
         let mut debugger = Debugger::new();
-        while self.window.is_open() && !self.window.is_key_down(Key::Escape) && !debugger.is_exit() {
+        while self.window.is_open() && !self.window.is_key_down(Key::Escape) &&
+              !debugger.is_exit() {
             {
                 match self.mode {
                     Mode::Running => {

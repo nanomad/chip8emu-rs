@@ -29,7 +29,6 @@ pub struct Chip8 {
     pc: usize,
     sp: usize,
     stack: Vec<usize>,
-
 }
 
 impl Chip8 {
@@ -43,7 +42,6 @@ impl Chip8 {
             pc: 0x200,
             sp: 0,
             stack: vec![0; 16],
-
         };
         chip8.load_fonts();
         chip8.load_rom(rom);
@@ -173,8 +171,8 @@ impl Chip8 {
                 println!("Skipping if key {:x} is not pressed", k);
                 let key = peripherals.keypad.get_current_key_input();
                 match key {
-                    Some(x) if x == k => {},
-                    _ => self.pc += 2
+                    Some(x) if x == k => {}
+                    _ => self.pc += 2,
                 }
             }
             Instruction::Key { vr } => {
@@ -184,7 +182,7 @@ impl Chip8 {
                     Some(x) => {
                         println!(" ... Got {:x}", x);
                         self.reg_v[vr] = x
-                    },
+                    }
                     _ => {
                         println!(" ... Waiting more");
                         self.pc -= 2; // Emulate a SLEEP
@@ -232,7 +230,7 @@ impl Chip8 {
                     let ticks_left = timer_clone.fetch_sub(1, Ordering::SeqCst) - 1;
                     if ticks_left > 0 {
                         println!("Still {} ticks left", ticks_left);
-                        thread::sleep(time::Duration::from_millis(1000/60));
+                        thread::sleep(time::Duration::from_millis(1000 / 60));
                     } else {
                         break;
                     }
