@@ -56,7 +56,7 @@ impl Debugger {
                 io::stdout().flush().expect("Could not flush stdout");
             }
         }
-        return again;
+        again
     }
 
     fn execute_command(&mut self,

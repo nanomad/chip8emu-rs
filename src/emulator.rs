@@ -30,7 +30,7 @@ pub struct Emulator {
 }
 
 impl Emulator {
-    pub fn new(rom: &Vec<u8>) -> Self {
+    pub fn new(rom: &[u8]) -> Self {
         let window_options = WindowOptions {
             borderless: false,
             title: true,
@@ -44,7 +44,7 @@ impl Emulator {
         });
 
         Emulator {
-            chip8: Chip8::new(&rom),
+            chip8: Chip8::new(rom),
             window: Window::new("RUST Chip8 Emulator", 64, 32, window_options).unwrap(),
             peripherals: Peripherals::new(),
 
@@ -116,7 +116,7 @@ impl Emulator {
     }
 
     fn update_key(&mut self, target_key: peripherals::Key, mapped_key: Key) {
-        let ref mut keypad = self.peripherals.keypad;
+        let keypad = &mut self.peripherals.keypad;
         keypad.set_button_state(target_key, self.window.is_key_down(mapped_key));
     }
 }

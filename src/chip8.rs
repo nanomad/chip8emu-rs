@@ -2,7 +2,6 @@ use std::convert::TryFrom;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::{thread, time};
-use std::thread::JoinHandle;
 
 use instruction::Instruction;
 use peripherals::Peripherals;
@@ -32,7 +31,7 @@ pub struct Chip8 {
 }
 
 impl Chip8 {
-    pub fn new(rom: &Vec<u8>) -> Chip8 {
+    pub fn new(rom: &[u8]) -> Chip8 {
         let mut chip8 = Chip8 {
             mem: vec![0; 0xFFF],
             reg_v: vec![0; 16],
@@ -54,7 +53,7 @@ impl Chip8 {
         }
     }
 
-    fn load_rom(&mut self, rom: &Vec<u8>) {
+    fn load_rom(&mut self, rom: &[u8]) {
         for (b, buf_i) in rom.iter().enumerate() {
             self.mem[0x200 + b] = *buf_i;
         }
