@@ -109,6 +109,11 @@ impl Chip8 {
                     self.pc += 2
                 }
             }
+            Instruction::Skne { vr, k } => {
+                if self.reg_v[vr] != k {
+                    self.pc += 2
+                }
+            }
             Instruction::Add { vr, k } => {
                 let old_val = self.reg_v[vr];
                 self.reg_v[vr] = old_val.wrapping_add(k);

@@ -7,6 +7,7 @@ pub enum Instruction {
     Jmp { addr: usize },
     Jsr { addr: usize },
     Skeq { vr: usize, k: u8 },
+    Skne { vr: usize, k: u8 },
     Mov { vr: usize, k: u8 },
     Movr { vr: usize, vy: usize },
     Shr { vr: usize },
@@ -43,6 +44,7 @@ impl TryFrom<u16> for Instruction {
             0x1000 => k_op(opcode, |addr| Instruction::Jmp { addr: addr as usize }),
             0x2000 => k_op(opcode, |addr| Instruction::Jsr { addr: addr as usize }),
             0x3000 => vr_k_op(opcode, |vr, k| Instruction::Skeq { vr: vr, k: k }),
+            0x4000 => vr_k_op(opcode, |vr, k| Instruction::Skne { vr: vr, k: k }),
             0x6000 => vr_k_op(opcode, |vr, k| Instruction::Mov { vr: vr, k: k }),
             0x7000 => vr_k_op(opcode, |vr, k| Instruction::Add { vr: vr, k: k }),
             0x8000 => {
@@ -136,6 +138,7 @@ impl fmt::Debug for Instruction {
             Instruction::Jmp { addr } => write!(f, "jmp    0x{:x}", addr),
             Instruction::Jsr { addr } => write!(f, "jsr    0x{:x}", addr),
             Instruction::Skeq { vr, k } => write!(f, "skeq   v{}, 0x{:x}", vr, k),
+            Instruction::Skne { vr, k } => write!(f, "skne   v{}, 0x{:x}", vr, k),
             Instruction::Mov { vr, k } => write!(f, "mov    v{}, 0x{:x}", vr, k),
             Instruction::Movr { vr, vy } => write!(f, "mov    v{}, v{}", vr, vy),
             Instruction::Shr { vr } => write!(f, "shr    v{}", vr),
