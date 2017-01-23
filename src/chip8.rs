@@ -126,11 +126,7 @@ impl Chip8 {
                 let old_r = self.reg_v[vr];
                 let old_y = self.reg_v[vy];
                 let (result, overflow) = old_r.overflowing_add(old_y);
-                if overflow {
-                    self.reg_v[0xF] = 1
-                } else {
-                    self.reg_v[0xF] = 0
-                }
+                self.reg_v[0xF] = if overflow { 1 } else { 0 };
                 self.reg_v[vr] = result;
             }
             Instruction::Subr { vr, vy } => {
